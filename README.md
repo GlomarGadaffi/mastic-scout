@@ -1,4 +1,4 @@
-# sentinel — two-board 802.11 IDS with out-of-band LoRa alerting
+# crispy-spoon — two-board 802.11 IDS with out-of-band LoRa alerting
 
 Native ESP-IDF (no Arduino). Two LilyGO T3-S3 MVSRBoards: one sniffs 2.4 GHz
 and detects attacks, the other rides in your pocket and annunciates over a
