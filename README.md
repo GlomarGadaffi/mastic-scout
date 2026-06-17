@@ -1,13 +1,12 @@
 # mastic-scout
 
-distributed LoRa alert relay. two roles (SENSOR, BASE) communicate via LoRa link to forward proximity/threat alerts. sensors detect events, TX via LoRa; base station RX and annunciates (OLED, buzzer, etc.).
+distributed 802.11 attack detector with a LoRa back-haul. two roles (SENSOR, BASE): sensors watch WiFi management frames for attack signatures and TX a compact alert over LoRa; the base RX and annunciates (OLED, buzzer).
 
 ## roles
 
 **SENSOR** (monitor mode):
-- runs Wi-Fi in monitor-only mode (80 ms dwell per channel)
-- detects beacons/probes in range via air capture
-- evaluates alert logic (heuristic or rule-based detection)
+- runs Wi-Fi in monitor mode (80 ms dwell per channel)
+- classifies management frames into attack signatures: deauth, deauth/auth/beacon floods, evil-twin, EAPOL capture, jam-suspect (`sig_t` in `alert.h`)
 - TX alerts via LoRa to base on matched conditions
 - core loop: capture → detect → queue alert → lora_tx_task drains queue
 
@@ -29,16 +28,19 @@ pin mapping: `board_config.h`
 ## alert protocol
 
 ```c
-typedef struct {
-    uint32_t sender_id;      // unique sensor ID
-    uint32_t timestamp;      // milliseconds since boot
-    uint8_t  alert_type;     // 0=proximity, 1=intrusion, etc.
-    uint16_t signal_strength; // RSSI from captured packet
-    uint8_t  confidence;     // 0-100 detection score
+typedef struct __attribute__((packed)) {   // 17 bytes on the air
+    uint8_t  magic;       // ALERT_MAGIC — frame/version guard
+    uint8_t  sensor_id;   // which sensor
+    uint8_t  sig;         // sig_t: attack signature
+    uint8_t  channel;     // 2.4 GHz channel of the event
+    int8_t   rssi;        // dBm of the triggering frame
+    uint8_t  src[6];      // addr2 of the suspect frame
+    uint16_t count;       // per-second rate (flood signatures)
+    uint32_t uptime_s;    // sensor uptime at trigger
 } alert_t;
 ```
 
-shared alert queue (`g_alert_q`, size 32) feeds both lora_tx (sensor) and ui (base).
+packed and fixed-width so sender and receiver agree without a serializer (LoRa airtime scales with payload). one `g_alert_q` (depth 32) is shared by both roles: sensor-side `detect_task` fills it and `lora_tx_task` drains; base-side `lora_rx_task` fills and `ui_task` drains.
 
 ## build & flash
 
