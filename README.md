@@ -1,4 +1,4 @@
-# mastic-scout
+# deauth-detector
 
 distributed 802.11 attack detector with a LoRa back-haul. two roles (SENSOR, BASE): sensors watch WiFi management frames for attack signatures and TX a compact alert over LoRa; the base RX and annunciates (OLED, buzzer).
 
