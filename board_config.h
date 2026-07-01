@@ -42,3 +42,12 @@
 #define SD_MISO         2
 
 /* WiFi monitor: 2.4 GHz only on the S3. channel list lives in capture.c. */
+
+/* ---- ROLE_BASE: WiFi STA + MQTT egress to an orbic-fusion broker ------- */
+/* No config UI on this board -- credentials are compiled in. Override all
+ * four before flashing a real deployment. SENSOR_ID here is a string (the
+ * MQTT topic's second segment), unrelated to alert_t's numeric sensor_id. */
+#define BASE_WIFI_SSID          "your-wifi-ssid"
+#define BASE_WIFI_PASS          "your-wifi-password"
+#define BASE_MQTT_BROKER_URI    "mqtt://192.168.1.1:1883"
+#define BASE_SENSOR_ID          "base-01"
